@@ -1,5 +1,5 @@
 #include <WiFi.h>
-#include <WebsocketsClient.h>
+#include <ArduinoWebsockets.h>
 
 using namespace websockets;
 
