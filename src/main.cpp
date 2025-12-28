@@ -151,7 +151,7 @@ void setup() {
     delay(500);
     USBSerial.print(".");
   }
-  MACAddress = Wifi.macAddress();
+  MACAddress = WiFi.macAddress();
   if(MACAddress){
      USBSerial.print("MACアドレス:");
      USBSerial.println(MACAddress);
