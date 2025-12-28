@@ -1,19 +1,23 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <WebSocketsClient.h>
 
 /* ===============================
    WiFi設定
 ================================ */
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* ssid     = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
 
 /* ===============================
    WebSocket設定
 ================================ */
-const char* WS_HOST = "example.com";   // サーバーのドメイン or IP
-const uint16_t WS_PORT = 80;            // wsなら80, wssなら443
-const char* WS_PATH = "/ws";            // WebSocketのパス
+const char* websocket_host = "example.com";
+const uint16_t websocket_port = 443;
+const char* websocket_path = "/ws";
 
+/* ===============================
+   オブジェクト
+================================ */
 WebSocketsClient webSocket;
 
 /* ===============================
@@ -22,21 +26,21 @@ WebSocketsClient webSocket;
 void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   switch (type) {
 
-    case WStype_CONNECTED:
-      Serial.println("[WebSocket] Connected");
+    case WStype_DISCONNECTED:
+      Serial.println("[WS] Disconnected");
       break;
 
-    case WStype_DISCONNECTED:
-      Serial.println("[WebSocket] Disconnected");
+    case WStype_CONNECTED:
+      Serial.println("[WS] Connected to server");
       break;
 
     case WStype_TEXT:
-      Serial.println("[WebSocket] Received message:");
-      Serial.println((char*)payload);   // JSON文字列をそのまま表示
+      Serial.println("[WS] Received TEXT:");
+      Serial.println((char*)payload);  // JSONをそのまま表示
       break;
 
     case WStype_ERROR:
-      Serial.println("[WebSocket] Error");
+      Serial.println("[WS] Error");
       break;
 
     default:
@@ -49,34 +53,26 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
 ================================ */
 void setup() {
   Serial.begin(115200);
-  delay(500);
+  delay(1000);
 
-  Serial.println("=== M5Stamp S3 WebSocket Logger ===");
-
-  /* ---- WiFi接続 ---- */
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting WiFi");
+  /* WiFi接続 */
+  Serial.println("Connecting to WiFi...");
+  WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
-  Serial.println("\n[WiFi] Connected");
-
-  /* ---- MACアドレス表示 ---- */
-  String mac = WiFi.macAddress();
-  Serial.print("[WiFi] MAC Address: ");
-  Serial.println(mac);
-
-  /* ---- IP表示（おまけ） ---- */
-  Serial.print("[WiFi] IP Address: ");
+  Serial.println("\nWiFi connected");
+  Serial.print("IP: ");
   Serial.println(WiFi.localIP());
 
-  /* ---- WebSocket接続 ---- */
-  webSocket.begin(WS_HOST, WS_PORT, WS_PATH);
+  /* WebSocket設定 */
+  webSocket.beginSSL(websocket_host, websocket_port, websocket_path);
   webSocket.onEvent(webSocketEvent);
-  webSocket.setReconnectInterval(5000); // 再接続間隔(ms)
+
+  webSocket.setReconnectInterval(5000); // 5秒ごとに再接続
 }
 
 /* ===============================
