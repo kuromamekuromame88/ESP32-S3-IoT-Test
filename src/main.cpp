@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <WebSocketsClient.h>
+#include <ArduinoJson.h>
 
 /* ===============================
    WiFi設定
@@ -11,37 +12,105 @@ const char* password = "05a7282157314";
 /* ===============================
    WebSocket設定
 ================================ */
-const char* websocket_host = "tool-webs.onrender.com";
-const uint16_t websocket_port = 443;
-const char* websocket_path = "/ws/wmqtt";
+const char* WS_HOST = "tool-webs.onrender.com";
+const uint16_t WS_PORT = 443;
+const char* WS_PATH = "/ws/wmqtt";
 
 /* ===============================
-   オブジェクト
+   アプリ名
+================================ */
+const char* APP_NAME = "wmqtt";
+
+/* ===============================
+   WebSocket
 ================================ */
 WebSocketsClient webSocket;
+
+/* ===============================
+   JSON送信関数
+================================ */
+void sendJson(const char* type, JsonVariant payload = JsonVariant()) {
+  StaticJsonDocument<256> doc;
+
+  doc["app"]  = APP_NAME;
+  doc["type"] = type;
+
+  if (!payload.isNull()) {
+    doc["data"] = payload;
+  }
+
+  String json;
+  USBSerializeJson(doc, json);
+
+  webSocket.sendTXT(json);
+
+  USBSerial.print("[WS] Sent: ");
+  USBSerial.println(json);
+}
+
+/* ===============================
+   受信JSON処理
+================================ */
+void handleJson(const char* app, const char* type, JsonDocument& doc) {
+
+  if (strcmp(type, "ping") == 0) {
+    USBSerial.println("[APP] ping received");
+
+    // pongを返す
+    sendJson("pong");
+  }
+
+  else if (strcmp(type, "chat") == 0 && strcmp(app, "webchat") == 0) {
+    const char* data = doc["data"] | "(no data)";
+    USBSerial.print("[APP] webchat chat data: ");
+    USBSerial.println(msg);
+  }
+
+  else {
+    USBSerial.print("[APP] unknown type: ");
+    USBSerial.println(type);
+  }
+}
 
 /* ===============================
    WebSocketイベント
 ================================ */
 void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
+
   switch (type) {
+
+    case WStype_CONNECTED:
+      USBSerial.println("[WS] Connected");
+
+      // 起動通知
+      sendJson("hello");
+      break;
 
     case WStype_DISCONNECTED:
       USBSerial.println("[WS] Disconnected");
       break;
 
-    case WStype_CONNECTED:
-      USBSerial.println("[WS] Connected to server");
-      break;
+    case WStype_TEXT: {
+      USBSerial.println("[WS] Received JSON:");
 
-    case WStype_TEXT:
-      USBSerial.println("[WS] Received TEXT:");
-      USBSerial.println((char*)payload);  // JSONをそのまま表示
-      break;
+      String jsonStr = String((char*)payload);
+      USBSerial.println(jsonStr);
 
-    case WStype_ERROR:
-      USBSerial.println("[WS] Error");
+      StaticJsonDocument<512> doc;
+      DeUSBSerializationError err = deUSBSerializeJson(doc, jsonStr);
+
+      if (err) {
+        USBSerial.print("[JSON] Parse error: ");
+        USBSerial.println(err.c_str());
+        return;
+      }
+
+      const char* app  = doc["app"]  | "";
+      const char* msgType = doc["type"] | "";
+
+      handleJson(app, msgType, doc);
       break;
+    }
 
     default:
       break;
@@ -49,15 +118,14 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
 }
 
 /* ===============================
-   セットアップ
+   setup
 ================================ */
 void setup() {
   USBSerial.begin(115200);
   delay(1000);
 
-  /* WiFi接続 */
-  USBSerial.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
+  USBSerial.print("WiFi connecting");
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -65,18 +133,15 @@ void setup() {
   }
 
   USBSerial.println("\nWiFi connected");
-  USBSerial.print("IP: ");
   USBSerial.println(WiFi.localIP());
 
-  /* WebSocket設定 */
-  webSocket.beginSSL(websocket_host, websocket_port, websocket_path);
+  webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
   webSocket.onEvent(webSocketEvent);
-
-  webSocket.setReconnectInterval(5000); // 5秒ごとに再接続
+  webSocket.setReconnectInterval(5000);
 }
 
 /* ===============================
-   ループ
+   loop
 ================================ */
 void loop() {
   webSocket.loop();
