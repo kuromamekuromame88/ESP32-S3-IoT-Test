@@ -5,15 +5,15 @@
 /* ===============================
    WiFi設定
 ================================ */
-const char* ssid     = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
+const char* ssid     = "aterm-e26bca-g";
+const char* password = "05a7282157314";
 
 /* ===============================
    WebSocket設定
 ================================ */
-const char* websocket_host = "example.com";
+const char* websocket_host = "tool-webs.onrender.com";
 const uint16_t websocket_port = 443;
-const char* websocket_path = "/ws";
+const char* websocket_path = "/ws/wmqtt";
 
 /* ===============================
    オブジェクト
