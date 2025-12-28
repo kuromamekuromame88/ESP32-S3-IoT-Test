@@ -1,19 +1,18 @@
-#include <Arduino.h>
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 
 /* ===============================
    WiFi設定
 ================================ */
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "aterm-e26bca-g";
+const char* WIFI_PASSWORD = "05a7282157314";
 
 /* ===============================
-   WebSocket設定（wss）
+   WebSocket（wss）
 ================================ */
-const char* WS_HOST = "example.com";
+const char* WS_HOST = "tool-webs.onrender.com";
 const uint16_t WS_PORT = 443;
-const char* WS_PATH = "/ws";
+const char* WS_PATH = "/ws/wmqtt";
 
 WebSocketsClient webSocket;
 
@@ -21,23 +20,24 @@ WebSocketsClient webSocket;
    WebSocketイベント
 ================================ */
 void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
+
   switch (type) {
 
     case WStype_CONNECTED:
-      SerialUSB.println("[WebSocket] Connected (wss)");
+      Serial.println("[WebSocket] Connected (wss)");
       break;
 
     case WStype_DISCONNECTED:
-      SerialUSB.println("[WebSocket] Disconnected");
+      Serial.println("[WebSocket] Disconnected");
       break;
 
     case WStype_TEXT:
-      SerialUSB.println("[WebSocket] Received JSON:");
-      SerialUSB.println((char*)payload);
+      Serial.println("[WebSocket] Received JSON:");
+      Serial.println((char*)payload);
       break;
 
     case WStype_ERROR:
-      SerialUSB.println("[WebSocket] Error");
+      Serial.println("[WebSocket] Error");
       break;
 
     default:
@@ -46,36 +46,36 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
 }
 
 /* ===============================
-   セットアップ
+   setup
 ================================ */
 void setup() {
-  SerialUSB.begin(115200);
+  Serial.begin(115200);
   delay(500);
 
-  SerialUSB.println("=== M5Stamp S3 WSS Logger ===");
+  Serial.println("=== M5Stamp S3 WSS Logger (PlatformIO) ===");
 
-  /* ---- WiFi接続 ---- */
+  /* ---- WiFi ---- */
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  SerialUSB.print("Connecting WiFi");
+  Serial.print("Connecting WiFi");
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    SerialUSB.print(".");
+    Serial.print(".");
   }
 
-  SerialUSB.println("\n[WiFi] Connected");
+  Serial.println("\n[WiFi] Connected");
 
-  /* ---- MACアドレス表示 ---- */
-  SerialUSB.print("[WiFi] MAC Address: ");
-  SerialUSB.println(WiFi.macAddress());
+  /* ---- MACアドレス ---- */
+  Serial.print("[WiFi] MAC Address: ");
+  Serial.println(WiFi.macAddress());
 
-  SerialUSB.print("[WiFi] IP Address: ");
-  SerialUSB.println(WiFi.localIP());
+  Serial.print("[WiFi] IP Address: ");
+  Serial.println(WiFi.localIP());
 
-  /* ---- WSS接続 ---- */
+  /* ---- WebSocket wss ---- */
   webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
 
-  // 証明書検証を行わない（まずはこれでOK）
+  // 証明書検証なし（まずはこれ）
   webSocket.setInsecure();
 
   webSocket.onEvent(webSocketEvent);
@@ -83,7 +83,7 @@ void setup() {
 }
 
 /* ===============================
-   ループ
+   loop
 ================================ */
 void loop() {
   webSocket.loop();
