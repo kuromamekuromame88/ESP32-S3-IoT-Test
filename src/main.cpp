@@ -97,7 +97,7 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       USBSerial.println(jsonStr);
 
       StaticJsonDocument<512> doc;
-      DeSerializationError err = deUSBSerializeJson(doc, jsonStr);
+      DeserializationError err = deserializeJson(doc, jsonStr);
 
       if (err) {
         USBSerial.print("[JSON] Parse error: ");
