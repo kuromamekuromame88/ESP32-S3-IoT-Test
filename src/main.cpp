@@ -22,6 +22,11 @@ const char* WS_PATH = "/ws/wmqtt";
 const char* APP_NAME = "wmqtt";
 
 /* ===============================
+   WifiのMACアドレス
+=============================== */
+String MACAddress;
+
+/* ===============================
    WebSocket
 ================================ */
 WebSocketsClient webSocket;
@@ -30,7 +35,7 @@ WebSocketsClient webSocket;
    JSON送信関数
 ================================ */
 void sendJson(const char* type, JsonVariant payload = JsonVariant()) {
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<300> doc;
 
   doc["app"]  = APP_NAME;
   doc["type"] = type;
@@ -82,8 +87,21 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
     case WStype_CONNECTED:
       USBSerial.println("[WS] Connected");
 
+      //JSON構成
+      StaticJsonDocument<300> json;
+      StaticJsonDocument<300> data;
+
+      json["deviceID"]  = APP_NAME;
+      json["type"] = type;
+       
+      data["data"] = json;
+
+      //String json;
+      //serializeJson(doc, json);
+
+      
       // 起動通知
-      sendJson("hello");
+      sendJson("regist", data);
       break;
 
     case WStype_DISCONNECTED:
@@ -130,6 +148,13 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     USBSerial.print(".");
+  }
+  MACAddress = Wifi.macAddress();
+  if(MACAddress){
+     USBSerial.print("MACアドレス:");
+     USBSerial.println(MACAddress);
+  }else{
+     USBSerial.println("ERROR!MACアドレスを取得できませんでした。");
   }
 
   USBSerial.println("\nWiFi connected");
