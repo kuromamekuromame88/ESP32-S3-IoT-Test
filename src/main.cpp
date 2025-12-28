@@ -54,7 +54,7 @@ void setup() {
 
   Serial.println("=== M5Stamp S3 WSS Logger (PlatformIO) ===");
 
-  /* ---- WiFi ---- */
+  /* ---- WiFi接続 ---- */
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting WiFi");
 
@@ -65,18 +65,21 @@ void setup() {
 
   Serial.println("\n[WiFi] Connected");
 
-  /* ---- MACアドレス ---- */
+  /* ---- MACアドレス表示 ---- */
   Serial.print("[WiFi] MAC Address: ");
   Serial.println(WiFi.macAddress());
 
   Serial.print("[WiFi] IP Address: ");
   Serial.println(WiFi.localIP());
 
-  /* ---- WebSocket wss ---- */
-  webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
-
-  // 証明書検証なし（まずはこれ）
-  webSocket.setInsecure();
+  /* ---- WSS接続（証明書検証なし） ---- */
+  webSocket.beginSSL(
+    WS_HOST,
+    WS_PORT,
+    WS_PATH,
+    "",     // サブプロトコルなし
+    false   // ← これが「insecure」
+  );
 
   webSocket.onEvent(webSocketEvent);
   webSocket.setReconnectInterval(5000);
