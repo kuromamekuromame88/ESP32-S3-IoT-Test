@@ -3,6 +3,8 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 
+#define DEVICE_TYPE "ONOFFLight"
+
 /* ===============================
    WiFi設定
 ================================ */
@@ -91,8 +93,8 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       StaticJsonDocument<300> json;
       StaticJsonDocument<300> data;
 
-      json["deviceID"]  = APP_NAME;
-      json["type"] = type;
+      json["deviceID"]  = MACAddress;
+      json["devicetype"] = DEVICE_TYPE;
        
       data["data"] = json;
 
