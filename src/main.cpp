@@ -27,20 +27,20 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   switch (type) {
 
     case WStype_DISCONNECTED:
-      Serial.println("[WS] Disconnected");
+      SerialUSB.println("[WS] Disconnected");
       break;
 
     case WStype_CONNECTED:
-      Serial.println("[WS] Connected to server");
+      SerialUSB.println("[WS] Connected to server");
       break;
 
     case WStype_TEXT:
-      Serial.println("[WS] Received TEXT:");
-      Serial.println((char*)payload);  // JSONをそのまま表示
+      SerialUSB.println("[WS] Received TEXT:");
+      SerialUSB.println((char*)payload);  // JSONをそのまま表示
       break;
 
     case WStype_ERROR:
-      Serial.println("[WS] Error");
+      SerialUSB.println("[WS] Error");
       break;
 
     default:
@@ -52,21 +52,21 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
    セットアップ
 ================================ */
 void setup() {
-  Serial.begin(115200);
+  SerialUSB.begin(115200);
   delay(1000);
 
   /* WiFi接続 */
-  Serial.println("Connecting to WiFi...");
+  SerialUSB.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    SerialUSB.print(".");
   }
 
-  Serial.println("\nWiFi connected");
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
+  SerialUSB.println("\nWiFi connected");
+  SerialUSB.print("IP: ");
+  SerialUSB.println(WiFi.localIP());
 
   /* WebSocket設定 */
   webSocket.beginSSL(websocket_host, websocket_port, websocket_path);
