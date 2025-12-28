@@ -40,7 +40,7 @@ void sendJson(const char* type, JsonVariant payload = JsonVariant()) {
   }
 
   String json;
-  USBSerializeJson(doc, json);
+  serializeJson(doc, json);
 
   webSocket.sendTXT(json);
 
@@ -63,7 +63,7 @@ void handleJson(const char* app, const char* type, JsonDocument& doc) {
   else if (strcmp(type, "chat") == 0 && strcmp(app, "webchat") == 0) {
     const char* data = doc["data"] | "(no data)";
     USBSerial.print("[APP] webchat chat data: ");
-    USBSerial.println(msg);
+    USBSerial.println(data);
   }
 
   else {
