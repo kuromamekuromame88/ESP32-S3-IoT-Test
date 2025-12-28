@@ -6,13 +6,13 @@ using namespace websockets;
 /* ===============================
    WiFi設定
 ================================ */
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "aterm-e26bca-g";
+const char* WIFI_PASSWORD = "05a7282157314";
 
 /* ===============================
    WebSocket設定
 ================================ */
-const char* WS_URL = "wss://example.com/ws";
+const char* WS_URL = "wss://tool-webs.onrender.com/ws/wmqtt";
 
 /* ===============================
    WebSocketクライアント
