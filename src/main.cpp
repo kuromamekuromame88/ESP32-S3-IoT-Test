@@ -3,13 +3,13 @@
 #include <Websocket.h>  // Arduino-Websocket-Fast
 
 /* ===== WiFi設定 ===== */
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "aterm-e26bca-g";
+const char* WIFI_PASSWORD = "05a7282157314";
 
 /* ===== 接続先 ===== */
-static const char* WS_HOST = "example.com";
+static const char* WS_HOST = "tool-webs.onrender.com";
 static const int   WS_PORT = 443;
-static const char* WS_PATH = "/ws";
+static const char* WS_PATH = "/ws/wmqtt";
 
 /* ===== WebSocket ===== */
 Websocket websocket;
