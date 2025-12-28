@@ -1,17 +1,18 @@
 #include <Arduino.h>
+#include <ledc.h>
 
 #define PWM_PIN 5
 #define FREQUENCY 1000
 
 int state = false;
 
-int ledon(int level){
+void ledon(int level){
   state = true;
   level = level?level:255;
   ledcWrite(PWM_PIN, level);
 }
 
-int ledoff(int level){
+void ledoff(int level){
   state = false;
   ledcWrite(PWM_PIN, 0);
 }
@@ -20,7 +21,7 @@ bool getstate(){
   return state;
 }
 
-int setup(){
+void setup(){
   //ピンの設定
   pinMode(PWM_PIN, OUTPUT);
 
@@ -28,7 +29,7 @@ int setup(){
   ledcAttach(PWM_PIN, FREQUENCY, 8);
 }
 
-int loop(){
+void loop(){
   ledcWrite(PWM_PIN, 0);
   delay(1000);
   ledcWrite(PWM_PIN, 255);
