@@ -75,7 +75,7 @@ void sendJson(const char* type, JsonDocument& dataDoc) {
    受信JSON処理
 ================================ */
 void handleJson(const char* type, JsonDocument& doc) {
-  if(doc["app"] !== "wmqtt") return;
+  if(doc["app"] != "wmqtt") return;
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
     return;
