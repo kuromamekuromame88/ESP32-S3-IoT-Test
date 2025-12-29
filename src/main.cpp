@@ -83,7 +83,7 @@ void handleJson(const char* type, JsonDocument& doc) {
 
   if (strcmp(type, "onoff") == 0) {
     USBSerial.print("data.value: ");
-    USBSerial.pringln(doc["data"]["value"]);
+    USBSerial.println(doc["data"]["value"]);
     bool value = doc["data"]["value"] | false;
     Light_flag = value;
 
