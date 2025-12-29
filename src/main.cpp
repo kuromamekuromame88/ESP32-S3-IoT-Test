@@ -98,8 +98,6 @@ void sendControl(const char* type, JsonDocument& dataDoc) {
 ================================ */
 void handleJson(const char* app, const char* type, JsonDocument& doc) {
 
-  bool isControl = doc["control"] | false;
-
   /* ---- 接続維持 ---- */
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
@@ -107,20 +105,17 @@ void handleJson(const char* app, const char* type, JsonDocument& doc) {
   }
 
   /* ---- 制御メッセージ ---- */
-  if (isControl) {
-    USBSerial.print("[CONTROL] ");
-    USBSerial.println(type);
+  USBSerial.print("[CONTROL] ");
+  USBSerial.println(type);
 
-    if (strcmp(type, "onoff") == 0) {
-      bool value = doc["data"]["value"] | false;
-      USBSerial.println(value ? "ON" : "OFF");
-
-      // 👉 GPIO制御をここに
-       if(value){
-         Light_flag = true;
-       }else{
-         Light_flag = false;
-       }
+  if (strcmp(type, "onoff") == 0) {
+    bool value = doc["data"]["value"] | false;
+    USBSerial.println(value ? "ON" : "OFF");
+    // 👉 GPIO制御をここに
+    if(value){
+      Light_flag = true;
+    }else{
+      Light_flag = false;
     }
     return;
   }
