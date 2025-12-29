@@ -4,7 +4,6 @@
 #include <ArduinoJson.h>
 
 #define DEVICE_TYPE "ONOFFLight"
-
 #define LED_PIN 5
 
 /* ===============================
@@ -36,17 +35,15 @@ String MACAddress;
 WebSocketsClient webSocket;
 
 /* ===============================
-グローバル変数群
+   グローバル状態
 ================================ */
-
-//ライトのフラグ
 bool Light_flag = false;
 
 /* ===============================
    JSON送信（dataなし）
 ================================ */
 void sendJson(const char* type) {
-  StaticJsonDocument<300> doc;
+  StaticJsonDocument<200> doc;
   doc["app"]  = APP_NAME;
   doc["type"] = type;
 
@@ -58,33 +55,14 @@ void sendJson(const char* type) {
 }
 
 /* ===============================
-   JSON送信（通常通知）
-   ※ controlフラグ = false
+   JSON送信（dataあり）
+   ※ controlは含めない
 ================================ */
 void sendJson(const char* type, JsonDocument& dataDoc) {
   StaticJsonDocument<300> doc;
   doc["app"]  = APP_NAME;
   doc["type"] = type;
-  doc["control"] = false;
   doc["data"] = dataDoc.as<JsonObject>();
-
-  String json;
-  serializeJson(doc, json);
-  webSocket.sendTXT(json);
-
-  USBSerial.println(json);
-}
-
-/* ===============================
-   JSON送信（制御要求）
-   ※ control=true
-================================ */
-void sendControl(const char* type, JsonDocument& dataDoc) {
-  StaticJsonDocument<300> doc;
-  doc["app"]     = APP_NAME;
-  doc["type"]    = type;
-  doc["control"] = true;
-  doc["data"]    = dataDoc.as<JsonObject>();
 
   String json;
   serializeJson(doc, json);
@@ -96,48 +74,39 @@ void sendControl(const char* type, JsonDocument& dataDoc) {
 /* ===============================
    受信JSON処理
 ================================ */
-void handleJson(const char* app, const char* type, JsonDocument& doc) {
-　if(!(strcmp(app, "wmqtt")== 0)) return;  
-  /* ---- 接続維持 ---- */
+void handleJson(const char* type, JsonDocument& doc) {
+  if(strcmp(app, "wmqtt") !== 0) return;
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
     return;
   }
 
-  /* ---- 制御メッセージ ---- */
-  USBSerial.print("[CONTROL] ");
-  USBSerial.println(type);
-
   if (strcmp(type, "onoff") == 0) {
     bool value = doc["data"]["value"] | false;
+    Light_flag = value;
+
+    USBSerial.print("[ONOFF] ");
     USBSerial.println(value ? "ON" : "OFF");
-    // 👉 GPIO制御をここに
-    if(value){
-      Light_flag = true;
-    }else{
-      Light_flag = false;
-    }
     return;
   }
 
-  /* ---- 通常通知 ---- */
-  USBSerial.print("[INFO] ");
+  USBSerial.print("[UNKNOWN] ");
   USBSerial.println(type);
 }
 
 /* ===============================
    WebSocketイベント
 ================================ */
-void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
+void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
 
-  switch (type) {
+  switch (event) {
 
     case WStype_CONNECTED: {
       StaticJsonDocument<200> data;
       data["deviceID"]   = MACAddress;
       data["devicetype"] = DEVICE_TYPE;
+      data["control"]    = false;   // ★ 登録時のみの識別フラグ
 
-      // 登録メッセージ（controlなし）
       sendJson("regist", data);
       break;
     }
@@ -146,11 +115,7 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       StaticJsonDocument<512> doc;
       if (deserializeJson(doc, payload)) return;
 
-      handleJson(
-        doc["app"]  | "",
-        doc["type"] | "",
-        doc
-      );
+      handleJson(doc["type"] | "", doc);
       break;
     }
 
@@ -164,9 +129,8 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
 ================================ */
 void setup() {
   pinMode(LED_PIN, OUTPUT);
-  Light_flag = false;
   digitalWrite(LED_PIN, LOW);
-   
+
   USBSerial.begin(115200);
 
   WiFi.begin(ssid, password);
@@ -184,9 +148,5 @@ void setup() {
 ================================ */
 void loop() {
   webSocket.loop();
-  if(Light_flag){
-    digitalWrite(LED_PIN, HIGH);
-  }else{
-    digitalWrite(LED_PIN, LOW);
-  }
+  digitalWrite(LED_PIN, Light_flag ? HIGH : LOW);
 }
