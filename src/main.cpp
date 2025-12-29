@@ -34,17 +34,32 @@ String MACAddress;
 WebSocketsClient webSocket;
 
 /* ===============================
-   JSON送信関数
+   JSON送信（dataなし）
 ================================ */
-void sendJson(const char* type, JsonVariant payload = JsonVariant()) {
+void sendJson(const char* type) {
   StaticJsonDocument<300> doc;
 
   doc["app"]  = APP_NAME;
   doc["type"] = type;
 
-  if (!payload.isNull()) {
-    doc["data"] = payload;
-  }
+  String json;
+  serializeJson(doc, json);
+
+  webSocket.sendTXT(json);
+
+  USBSerial.print("[WS] Sent: ");
+  USBSerial.println(json);
+}
+
+/* ===============================
+   JSON送信（dataあり）
+================================ */
+void sendJson(const char* type, JsonDocument& dataDoc) {
+  StaticJsonDocument<300> doc;
+
+  doc["app"]  = APP_NAME;
+  doc["type"] = type;
+  doc["data"] = dataDoc.as<JsonObject>();
 
   String json;
   serializeJson(doc, json);
@@ -62,8 +77,6 @@ void handleJson(const char* app, const char* type, JsonDocument& doc) {
 
   if (strcmp(type, "ping") == 0) {
     USBSerial.println("[APP] ping received");
-
-    // pongを返す
     sendJson("pong");
   }
 
@@ -86,25 +99,16 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
 
   switch (type) {
 
-    case WStype_CONNECTED:
+    case WStype_CONNECTED: {
       USBSerial.println("[WS] Connected");
 
-      //JSON構成
-      StaticJsonDocument<300> json;
-      StaticJsonDocument<300> data;
+      StaticJsonDocument<200> data;
+      data["deviceID"]   = MACAddress;
+      data["devicetype"] = DEVICE_TYPE;
 
-      json["deviceID"]  = MACAddress;
-      json["devicetype"] = DEVICE_TYPE;
-       
-      data["data"] = json;
-
-      //String json;
-      //serializeJson(doc, json);
-
-      
-      // 起動通知
       sendJson("regist", data);
       break;
+    }
 
     case WStype_DISCONNECTED:
       USBSerial.println("[WS] Disconnected");
@@ -151,15 +155,12 @@ void setup() {
     delay(500);
     USBSerial.print(".");
   }
-  MACAddress = WiFi.macAddress();
-  if(MACAddress){
-     USBSerial.print("MACアドレス:");
-     USBSerial.println(MACAddress);
-  }else{
-     USBSerial.println("ERROR!MACアドレスを取得できませんでした。");
-  }
 
-  USBSerial.println("\nWiFi connected");
+  MACAddress = WiFi.macAddress();
+  USBSerial.print("\nMACアドレス: ");
+  USBSerial.println(MACAddress);
+
+  USBSerial.println("WiFi connected");
   USBSerial.println(WiFi.localIP());
 
   webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
