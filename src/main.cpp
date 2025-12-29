@@ -75,15 +75,14 @@ void sendJson(const char* type, JsonDocument& dataDoc) {
    受信JSON処理
 ================================ */
 void handleJson(const char* type, JsonDocument& doc) {
-  //if(doc["app"] != "wmqtt") return;
+  if(doc["app"] != "wmqtt") return;
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
     return;
   }
 
   if (strcmp(type, "onoff") == 0) {
-    USBSerial.print("data.value: ");
-    USBSerial.println(typeof doc["data"]["value"]);
+    if(doc["data"]["MACID"] != MACAddress) return;
     bool value = doc["data"]["value"] | false;
     Light_flag = value;
 
