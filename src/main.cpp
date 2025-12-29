@@ -97,7 +97,7 @@ void sendControl(const char* type, JsonDocument& dataDoc) {
    受信JSON処理
 ================================ */
 void handleJson(const char* app, const char* type, JsonDocument& doc) {
-
+　if(!(strcmp(app, "wmqtt")== 0)) return;  
   /* ---- 接続維持 ---- */
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
