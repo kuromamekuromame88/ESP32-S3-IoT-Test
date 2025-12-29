@@ -109,6 +109,7 @@ void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
       StaticJsonDocument<200> data;
       data["MACID"]      = MACAddress;
       data["devicetype"] = DEVICE_TYPE;
+      data["deviceName"] = "百均ライト";
       data["control"]    = false;   // 登録時のみ
 
       sendJson("regist", data);
