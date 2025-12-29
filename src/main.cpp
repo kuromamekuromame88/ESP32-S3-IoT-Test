@@ -5,6 +5,8 @@
 
 #define DEVICE_TYPE "ONOFFLight"
 
+#define LED_PIN 5
+
 /* ===============================
    WiFi設定
 ================================ */
@@ -32,6 +34,13 @@ String MACAddress;
    WebSocket
 ================================ */
 WebSocketsClient webSocket;
+
+/* ===============================
+グローバル変数群
+================================ */
+
+//ライトのフラグ
+bool Light_flag = false;
 
 /* ===============================
    JSON送信（dataなし）
@@ -106,6 +115,11 @@ void handleJson(const char* app, const char* type, JsonDocument& doc) {
       USBSerial.println(value ? "ON" : "OFF");
 
       // 👉 GPIO制御をここに
+       if(value){
+         Light_flag = true;
+       }else{
+         Light_flag = false;
+       }
     }
     return;
   }
@@ -153,6 +167,10 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
    setup
 ================================ */
 void setup() {
+  pinMode(LED_PIN, OUTPUT);
+  Light_flag = false;
+  digitaiWrite(LED_PIN, LOW);
+   
   USBSerial.begin(115200);
 
   WiFi.begin(ssid, password);
@@ -170,4 +188,9 @@ void setup() {
 ================================ */
 void loop() {
   webSocket.loop();
+  if(Light_flag){
+    digitalWrite(LED_PIN, HIGH);
+  }else{
+    digitaiWrite(LED_PIN, LOW);
+  }
 }
