@@ -75,14 +75,17 @@ void sendJson(const char* type, JsonDocument& dataDoc) {
    受信JSON処理
 ================================ */
 void handleJson(const char* type, JsonDocument& doc) {
-  if(doc["app"] != "wmqtt") return;
+  const char* app = doc["app"] | "";
+  if (strcmp(app, APP_NAME) != 0) return;
+  
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
     return;
   }
 
   if (strcmp(type, "onoff") == 0) {
-    if(doc["data"]["MACID"] != MACAddress) return;
+    const char* mac = doc["data"]["MACID"] | "";
+    if (MACAddress != mac) return;
     bool value = doc["data"]["value"] | false;
     Light_flag = value;
 
