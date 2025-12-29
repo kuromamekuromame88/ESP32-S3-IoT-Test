@@ -56,6 +56,7 @@ void sendJson(const char* type) {
 
 /* ===============================
    JSON送信（dataあり）
+   ※ controlは含めない
 ================================ */
 void sendJson(const char* type, JsonDocument& dataDoc) {
   StaticJsonDocument<300> doc;
@@ -75,21 +76,15 @@ void sendJson(const char* type, JsonDocument& dataDoc) {
 ================================ */
 void handleJson(const char* type, JsonDocument& doc) {
 
-  /* ---- app確認 ---- */
-  const char* app = doc["app"] | "";
-  if (strcmp(app, APP_NAME) != 0) return;
+  if (doc["app"] != "wmqtt") return;
 
-  /* ---- ping ---- */
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
     return;
   }
 
-  /* ---- onoff制御 ---- */
   if (strcmp(type, "onoff") == 0) {
-
-    const char* mac = doc["data"]["MACID"] | "";
-    if (MACAddress != mac) return;
+    if (doc["data"]["MACID"] != MACAddress) return;
 
     bool value = doc["data"]["value"] | false;
     Light_flag = value;
@@ -121,8 +116,20 @@ void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
     }
 
     case WStype_TEXT: {
+      /* ==== ★ 受信JSONをそのままログ表示 ==== */
+      USBSerial.print("[RECV RAW] ");
+      USBSerial.write(payload, length);
+      USBSerial.println();
+      /* ====================================== */
+
       StaticJsonDocument<512> doc;
-      if (deserializeJson(doc, payload)) return;
+      DeserializationError err = deserializeJson(doc, payload);
+
+      if (err) {
+        USBSerial.print("[JSON ERROR] ");
+        USBSerial.println(err.c_str());
+        return;
+      }
 
       handleJson(doc["type"] | "", doc);
       break;
