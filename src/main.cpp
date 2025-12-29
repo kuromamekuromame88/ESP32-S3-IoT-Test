@@ -41,6 +41,7 @@ void sendJson(const char* type) {
 
   doc["app"]  = APP_NAME;
   doc["type"] = type;
+  doc["control"] = false;
 
   String json;
   serializeJson(doc, json);
