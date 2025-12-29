@@ -152,7 +152,8 @@ void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
 ================================ */
 void setup() {
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
+  AnalogWrite(LED_PIN, 0);
+  //digitalWrite(LED_PIN, LOW);
 
   USBSerial.begin(115200);
 
@@ -171,5 +172,6 @@ void setup() {
 ================================ */
 void loop() {
   webSocket.loop();
-  digitalWrite(LED_PIN, Light_flag ? HIGH : LOW);
+  //digitalWrite(LED_PIN, Light_flag ? HIGH : LOW);
+  AnalogWrite(LED_PIN, Light_flag ? 255 : 0);
 }
