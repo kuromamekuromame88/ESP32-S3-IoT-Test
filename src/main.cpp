@@ -41,7 +41,6 @@ void sendJson(const char* type) {
 
   doc["app"]  = APP_NAME;
   doc["type"] = type;
-  doc["control"] = false;
 
   String json;
   serializeJson(doc, json);
@@ -55,11 +54,12 @@ void sendJson(const char* type) {
 /* ===============================
    JSON送信（dataあり）
 ================================ */
-void sendJson(const char* type, JsonDocument& dataDoc) {
+void sendJson(const char* type, JsonDocument& dataDoc, bool control) {
   StaticJsonDocument<300> doc;
 
   doc["app"]  = APP_NAME;
   doc["type"] = type;
+  doc["control"] = control;
   doc["data"] = dataDoc.as<JsonObject>();
 
   String json;
