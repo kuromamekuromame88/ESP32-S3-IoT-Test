@@ -56,7 +56,6 @@ void sendJson(const char* type) {
 
 /* ===============================
    JSON送信（dataあり）
-   ※ controlは含めない
 ================================ */
 void sendJson(const char* type, JsonDocument& dataDoc) {
   StaticJsonDocument<300> doc;
@@ -75,17 +74,23 @@ void sendJson(const char* type, JsonDocument& dataDoc) {
    受信JSON処理
 ================================ */
 void handleJson(const char* type, JsonDocument& doc) {
+
+  /* ---- app確認 ---- */
   const char* app = doc["app"] | "";
   if (strcmp(app, APP_NAME) != 0) return;
-  
+
+  /* ---- ping ---- */
   if (strcmp(type, "ping") == 0) {
     sendJson("pong");
     return;
   }
 
+  /* ---- onoff制御 ---- */
   if (strcmp(type, "onoff") == 0) {
+
     const char* mac = doc["data"]["MACID"] | "";
     if (MACAddress != mac) return;
+
     bool value = doc["data"]["value"] | false;
     Light_flag = value;
 
@@ -107,9 +112,9 @@ void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
 
     case WStype_CONNECTED: {
       StaticJsonDocument<200> data;
-      data["MACID"]   = MACAddress;
+      data["MACID"]      = MACAddress;
       data["devicetype"] = DEVICE_TYPE;
-      data["control"]    = false;   // ★ 登録時のみの識別フラグ
+      data["control"]    = false;   // 登録時のみ
 
       sendJson("regist", data);
       break;
