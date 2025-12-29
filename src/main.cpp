@@ -82,7 +82,7 @@ void handleJson(const char* type, JsonDocument& doc) {
 
     StaticJsonDocument<200> data;
     data["MACID"]      = MACAddress;
-    data["devicetype"] = DEVICE_TYPE;
+    data["deviceType"] = DEVICE_TYPE;
     data["deviceName"] = "百均ライト";
     data["light"]      = Light_flag;
 
@@ -116,7 +116,7 @@ void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
     case WStype_CONNECTED: {
       StaticJsonDocument<200> data;
       data["MACID"]      = MACAddress;
-      data["devicetype"] = DEVICE_TYPE;
+      data["deviceType"] = DEVICE_TYPE;
       data["deviceName"] = "百均ライト";
       data["control"]    = false;   // 登録時のみ
 
