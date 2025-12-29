@@ -103,7 +103,7 @@ void webSocketEvent(WStype_t event, uint8_t* payload, size_t length) {
 
     case WStype_CONNECTED: {
       StaticJsonDocument<200> data;
-      data["deviceID"]   = MACAddress;
+      data["MACID"]   = MACAddress;
       data["devicetype"] = DEVICE_TYPE;
       data["control"]    = false;   // ★ 登録時のみの識別フラグ
 
