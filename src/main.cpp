@@ -59,12 +59,13 @@ void sendJson(const char* type) {
 
 /* ===============================
    JSON送信（通常通知）
-   ※ controlフラグなし
+   ※ controlフラグ = false
 ================================ */
 void sendJson(const char* type, JsonDocument& dataDoc) {
   StaticJsonDocument<300> doc;
   doc["app"]  = APP_NAME;
   doc["type"] = type;
+  doc["control"] = false;
   doc["data"] = dataDoc.as<JsonObject>();
 
   String json;
