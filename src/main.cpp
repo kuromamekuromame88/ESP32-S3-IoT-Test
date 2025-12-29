@@ -38,36 +38,48 @@ WebSocketsClient webSocket;
 ================================ */
 void sendJson(const char* type) {
   StaticJsonDocument<300> doc;
-
   doc["app"]  = APP_NAME;
   doc["type"] = type;
 
   String json;
   serializeJson(doc, json);
-
   webSocket.sendTXT(json);
 
-  USBSerial.print("[WS] Sent: ");
   USBSerial.println(json);
 }
 
 /* ===============================
-   JSON送信（dataあり）
+   JSON送信（通常通知）
+   ※ controlフラグなし
 ================================ */
-void sendJson(const char* type, JsonDocument& dataDoc, bool control) {
+void sendJson(const char* type, JsonDocument& dataDoc) {
   StaticJsonDocument<300> doc;
-
   doc["app"]  = APP_NAME;
   doc["type"] = type;
-  doc["control"] = control;
   doc["data"] = dataDoc.as<JsonObject>();
 
   String json;
   serializeJson(doc, json);
-
   webSocket.sendTXT(json);
 
-  USBSerial.print("[WS] Sent: ");
+  USBSerial.println(json);
+}
+
+/* ===============================
+   JSON送信（制御要求）
+   ※ control=true
+================================ */
+void sendControl(const char* type, JsonDocument& dataDoc) {
+  StaticJsonDocument<300> doc;
+  doc["app"]     = APP_NAME;
+  doc["type"]    = type;
+  doc["control"] = true;
+  doc["data"]    = dataDoc.as<JsonObject>();
+
+  String json;
+  serializeJson(doc, json);
+  webSocket.sendTXT(json);
+
   USBSerial.println(json);
 }
 
@@ -76,21 +88,31 @@ void sendJson(const char* type, JsonDocument& dataDoc, bool control) {
 ================================ */
 void handleJson(const char* app, const char* type, JsonDocument& doc) {
 
+  bool isControl = doc["control"] | false;
+
+  /* ---- 接続維持 ---- */
   if (strcmp(type, "ping") == 0) {
-    USBSerial.println("[APP] ping received");
     sendJson("pong");
+    return;
   }
 
-  else if (strcmp(type, "chat") == 0 && strcmp(app, "webchat") == 0) {
-    const char* data = doc["data"] | "(no data)";
-    USBSerial.print("[APP] webchat chat data: ");
-    USBSerial.println(data);
-  }
-
-  else {
-    USBSerial.print("[APP] unknown type: ");
+  /* ---- 制御メッセージ ---- */
+  if (isControl) {
+    USBSerial.print("[CONTROL] ");
     USBSerial.println(type);
+
+    if (strcmp(type, "onoff") == 0) {
+      bool value = doc["data"]["value"] | false;
+      USBSerial.println(value ? "ON" : "OFF");
+
+      // 👉 GPIO制御をここに
+    }
+    return;
   }
+
+  /* ---- 通常通知 ---- */
+  USBSerial.print("[INFO] ");
+  USBSerial.println(type);
 }
 
 /* ===============================
@@ -101,39 +123,24 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   switch (type) {
 
     case WStype_CONNECTED: {
-      USBSerial.println("[WS] Connected");
-
       StaticJsonDocument<200> data;
       data["deviceID"]   = MACAddress;
       data["devicetype"] = DEVICE_TYPE;
 
+      // 登録メッセージ（controlなし）
       sendJson("regist", data);
       break;
     }
 
-    case WStype_DISCONNECTED:
-      USBSerial.println("[WS] Disconnected");
-      break;
-
     case WStype_TEXT: {
-      USBSerial.println("[WS] Received JSON:");
-
-      String jsonStr = String((char*)payload);
-      USBSerial.println(jsonStr);
-
       StaticJsonDocument<512> doc;
-      DeserializationError err = deserializeJson(doc, jsonStr);
+      if (deserializeJson(doc, payload)) return;
 
-      if (err) {
-        USBSerial.print("[JSON] Parse error: ");
-        USBSerial.println(err.c_str());
-        return;
-      }
-
-      const char* app  = doc["app"]  | "";
-      const char* msgType = doc["type"] | "";
-
-      handleJson(app, msgType, doc);
+      handleJson(
+        doc["app"]  | "",
+        doc["type"] | "",
+        doc
+      );
       break;
     }
 
@@ -147,22 +154,11 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
 ================================ */
 void setup() {
   USBSerial.begin(115200);
-  delay(1000);
 
   WiFi.begin(ssid, password);
-  USBSerial.print("WiFi connecting");
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    USBSerial.print(".");
-  }
+  while (WiFi.status() != WL_CONNECTED) delay(500);
 
   MACAddress = WiFi.macAddress();
-  USBSerial.print("\nMACアドレス: ");
-  USBSerial.println(MACAddress);
-
-  USBSerial.println("WiFi connected");
-  USBSerial.println(WiFi.localIP());
 
   webSocket.beginSSL(WS_HOST, WS_PORT, WS_PATH);
   webSocket.onEvent(webSocketEvent);
